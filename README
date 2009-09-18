@@ -1,0 +1,40 @@
+I compiled the attached java into my Solr installation.
+
+Add this fieldtype to schema.xml, along with some sort to dynamicField
+to use it.
+
+   <fieldtype name="geo" class="solr.TextField">
+     <analyzer>
+       <tokenizer class="com.km.geosolr.GeoHashSolrTokenizerFactory" />
+     </analyzer>
+   </fieldtype>
+
+  <dynamicField name="*_geo" type="geo" indexed="true" stored="true"/>
+
+Then add this to the solrconfig.xml:
+
+ <searchComponent name="geo" class="com.km.geosolr.GeoComponent" />
+
+  <!-- inside <requestHandler name="standard" .... -->
+   <arr name="first-components">
+     <str>geo</str>
+   </arr>
+
+I tested it by uploading
+
+<add>
+ <doc>
+   <field name="id">hi</field>
+   <field name="omg_geo">37.777864,-122.424173</field>
+ </doc>
+</add>
+
+And then running the query:
+
+http://localhost:8983/solr/select?gf=omg_geo&lat=37.777864&lng=-124.43&radius=1&q=*.*
+
+which worked.  I then ran:
+
+http://localhost:8983/solr/select?gf=omg_geo&lat=10&lng=-124.43&radius=1&q=*:*
+
+which returned 0 results as expected.
